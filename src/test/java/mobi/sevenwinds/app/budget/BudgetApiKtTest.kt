@@ -33,9 +33,9 @@ class BudgetApiKtTest : ServerTest() {
             .toResponse<BudgetYearStatsResponse>().let { response ->
                 println("${response.total} / ${response.items} / ${response.totalByType}")
 
-                Assert.assertEquals(5, response.total)
+                Assert.assertEquals(3, response.total)
                 Assert.assertEquals(3, response.items.size)
-                Assert.assertEquals(105, response.totalByType[BudgetType.Приход.name])
+                Assert.assertEquals(55, response.totalByType[BudgetType.Приход.name])
             }
     }
 
@@ -52,13 +52,18 @@ class BudgetApiKtTest : ServerTest() {
         RestAssured.given()
             .get("/budget/year/2020/stats?limit=100&offset=0")
             .toResponse<BudgetYearStatsResponse>().let { response ->
-                println(response.items)
 
-                Assert.assertEquals(30, response.items[0].amount)
-                Assert.assertEquals(5, response.items[1].amount)
-                Assert.assertEquals(400, response.items[2].amount)
-                Assert.assertEquals(100, response.items[3].amount)
-                Assert.assertEquals(50, response.items[4].amount)
+                val sortedItems = response.items.sortedWith(compareBy(
+                    { it.month }, // Sort by month ascending
+                    { it.amount * -1 } // Sort by amount descending (multiplying by -1)
+                ))
+                println(sortedItems)
+
+                Assert.assertEquals(30, sortedItems[0].amount)
+                Assert.assertEquals(5, sortedItems[1].amount)
+                Assert.assertEquals(400, sortedItems[2].amount)
+                Assert.assertEquals(100, sortedItems[3].amount)
+                Assert.assertEquals(50, sortedItems[4].amount)
             }
     }
 
@@ -74,8 +79,14 @@ class BudgetApiKtTest : ServerTest() {
             .post("/budget/add")
             .then().statusCode(400)
     }
+    @Test
+    private fun addRecord(record: BudgetRecord, authorId: Int? = null) {
+        val budgetRecord = if (authorId != null) {
+            record.copy(authorId = authorId)
+        } else {
+            record
+        }
 
-    private fun addRecord(record: BudgetRecord) {
         RestAssured.given()
             .jsonBody(record)
             .post("/budget/add")

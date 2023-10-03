@@ -17,6 +17,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
 import mobi.sevenwinds.app.Config
+import mobi.sevenwinds.app.budget.api.authorAPIRoutes
 import mobi.sevenwinds.modules.DatabaseFactory
 import mobi.sevenwinds.modules.initSwagger
 import mobi.sevenwinds.modules.serviceRouting
@@ -70,6 +71,7 @@ fun Application.module() {
 
     apiRouting {
         swaggerRouting()
+        authorAPIRoutes()
     }
 
     routing {
